@@ -27,92 +27,110 @@ server.registerTool(
   }
 );
 
-// Main prompt optimization tool
-server.registerTool(
-  "optimize-prompt",
-  {
-    title: "Optimize User Prompt",
-    description:
-      "Takes a user's original prompt and returns an optimized, refined version. " +
-      "The output should be used as the actual prompt to execute, not the original input. " +
-      "This tool acts as a prompt engineer to improve clarity, specificity, and effectiveness.",
-    inputSchema: {
-      originalPrompt: z.string(),
-      context: z.string().optional(),
-    },
-  },
-  async ({ originalPrompt, context }) => {
-    // This creates instructions for the LLM to optimize the prompt
-    const optimizationInstructions = `Act as an expert prompt engineer. A user has provided the following prompt that needs optimization:
-
-      ORIGINAL PROMPT:
-      "${originalPrompt}"
-      ${context ? `\nADDITIONAL CONTEXT:\n${context}` : ""}
-
-          YOUR TASK:
-          Analyze this prompt and create an OPTIMIZED VERSION that:
-          1. Is clear, specific, and unambiguous
-          2. Includes relevant context and constraints
-          3. Uses effective prompt engineering techniques
-          4. Maintains the user's original intent
-          5. Is structured for optimal AI performance
-
-      OUTPUT FORMAT:
-      Provide ONLY the optimized prompt itself - no explanations, no meta-commentary, no sections. 
-      Just write the improved prompt as if you are the user making the request.
-
-      The optimized prompt should be ready to execute immediately.`;
-
-    return {
-      content: [
-        {
-          type: "text",
-          text: optimizationInstructions,
-        },
-      ],
-    };
-  }
-);
-
 // Advanced iterative optimization tool
 server.registerTool(
   "optimize-prompt-interactive",
   {
     title: "Optimize Prompt (Interactive)",
     description:
-      "Provides an interactive prompt optimization experience with explanations and questions. " +
-      "Returns both the optimized prompt AND suggestions for further improvement.",
+      "Provides expert prompt engineering guidance. Returns a formatted, copy-paste ready optimized prompt " +
+      "for GitHub Copilot in VSCode, with optional clarifications.",
     inputSchema: {
       originalPrompt: z.string(),
     },
   },
   async ({ originalPrompt }) => {
-    const interactiveOptimization = `
-    I want you to become my Prompt engineer. Your goal is to help me craft the best possible prompt for my needs. 
-    The prompt will be used by you, ChatGPT. You will follow the following process:
-        1. Your first response will be to ask me what the prompt should be about. I will provide my answer, but we will 
-        need to improve it through continual iterations by going through the next steps.
-        2. Based on my input, you will generate 2 sections, a) Revised prompt (provide your rewritten prompt, it should 
-        be clear, concise, and easily understood by you), b) Questions (ask any relevant questions pertaining to what 
-        additional information is needed from me to improve the prompt).
-        3. We will continue this iterative process with me providing additional information to you and you updating 
-        the prompt in the Revised prompt section until I say we are done.
+    const interactiveOptimization = `You are a prompt engineering expert optimizing this request: "${originalPrompt}"
 
-      ORIGINAL PROMPT:
-      "${originalPrompt}"
+# OPTIMIZATION FRAMEWORK
 
-      Provide your response in this format:
+## Step 1: Analyze the Original Prompt
+Identify:
+- **Core intent**: What is the user really trying to accomplish?
+- **Ambiguities**: What's unclear or underspecified?
+- **Missing context**: What technical details would improve outcomes?
+- **Output format**: What deliverable does the user expect?
 
-      ## OPTIMIZED PROMPT
-      [Write the improved, production-ready prompt here]
+## Step 2: Apply Optimization Principles
 
-      ## IMPROVEMENTS MADE
-      - [List key improvements: e.g., added specificity, clarified intent, structured better]
+Transform the prompt using these techniques:
 
-      ## OPTIONAL ENHANCEMENTS
-      [Ask 2-3 questions that could further refine this prompt, if applicable]
+### Specificity Enhancement
+- Replace vague terms with concrete specifications
+- Add technical stack details (languages, frameworks, libraries)
+- Specify constraints (performance, security, scalability)
+- Define success criteria and quality standards
 
-      Be thorough but concise. The optimized prompt should be immediately usable.`;
+### Structural Clarity
+- Use clear, active language
+- Break complex requests into logical components
+- Add context about the use case and environment
+- Specify the desired output format (code, documentation, analysis, etc.)
+
+### Actionability
+- Make requirements concrete and testable
+- Include examples or patterns when helpful
+- Specify error handling and edge cases
+- Add relevant best practices and considerations
+
+## Step 3: Identify Strategic Clarifications
+
+Ask 2-3 questions ONLY if they meet these criteria:
+- ✅ Would significantly change the approach or solution
+- ✅ Involve critical decisions (architecture, technology choices, scope)
+- ✅ Address ambiguity that can't be reasonably assumed
+- ❌ DON'T ask about minor preferences or obvious defaults
+- ❌ DON'T ask if the prompt is already clear enough
+
+If no strategic clarifications needed, just say the optimized prompt is ready to use.
+
+---
+
+# YOUR TASK
+
+Optimize "${originalPrompt}" following the framework above.
+
+## RESPONSE FORMAT
+
+### OPTIMIZED PROMPT (Ready to Copy & Paste)
+
+\`\`\`
+[Rewrite the prompt using the optimization principles above. Make it:
+- Specific with technical details and context
+- Clear about deliverables and requirements
+- Structured and easy to understand
+- Well-defined scope and constraints
+- Ready to produce high-quality results]
+\`\`\`
+
+**📋 Copy the content above (inside the code block) and paste it directly into GitHub Copilot chat.**
+
+---
+
+### IMPROVEMENTS MADE
+- [Improvement 1: e.g., "Added specific framework requirements instead of generic terms"]
+- [Improvement 2: e.g., "Included error handling and validation considerations"]
+- [Improvement 3: e.g., "Specified expected output format and structure"]
+- [Continue listing key enhancements...]
+
+### CLARIFICATION QUESTIONS
+[List 2-3 strategic questions that would significantly improve the result, OR write:]
+"None - the prompt is sufficiently clear and ready to use."
+
+**Note:** If you have clarifications, I can refine the optimized prompt further. Otherwise, use the prompt above directly.
+
+---
+
+# CRITICAL REMINDERS
+
+1. **Focus on clarity** - eliminate ambiguity and add necessary context
+2. **Be strategic with questions** - max 2-3, only if truly impactful
+3. **Structure for success** - organize the prompt logically and clearly
+4. **Maintain user intent** - preserve the original goal while enhancing specificity
+5. **Ready to use** - the optimized prompt should be immediately actionable
+6. **Format for copy-paste** - present the optimized prompt in a clear code block for easy copying
+
+The goal is: Original Prompt → Analysis → Copy-Paste Ready Optimized Prompt → Optional Clarifications`;
 
     return {
       content: [
